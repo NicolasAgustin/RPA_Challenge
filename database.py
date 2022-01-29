@@ -20,27 +20,6 @@ class Database:
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
 
-    def test(self):
-        registro = Datos(id=1,
-                         cod_localidad=12,
-                         id_provincia=12,
-                         id_departamento=12,
-                         categoria='cine',
-                         provincia='santa fe',
-                         localidad='rosario',
-                         nombre='hoyts',
-                         domicilio='calle 123',
-                         codigo_postal='2000',
-                         telefono='34213412',
-                         mail=None,
-                         web=None)
-        try:
-            self.session.add(registro)
-            self.session.commit()
-        finally:
-            if self.session is not None:
-                self.session.close()
-
     def create_default_tables(self):
         try:
             connection = self.engine.connect()
@@ -69,10 +48,10 @@ class Database:
             print('Error eliminando la informacion')
             self.log_error()
 
-    def insert_dataframe(self, dataframe):
+    def insert_dataframe(self, dataframe, table_name):
         try:
             connection = self.engine.connect()
-            dataframe.to_sql('datos', connection, if_exists='replace', index = False)
+            dataframe.to_sql(table_name, connection, if_exists='replace', index = False)
             self.session.commit()
         except Exception as ex:
             print("Error insertando registro")

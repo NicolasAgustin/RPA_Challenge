@@ -1,8 +1,11 @@
 import pandas as pd
+import pandasql as ps
 import os
 import numpy as np
+import re
 import unidecode
 from decouple import config
+from pandasql import sqldf
 
 def normalize_headers(headers):
     for i in range(len(headers)):
@@ -42,8 +45,15 @@ def main():
         data.columns = normalize_headers(data.columns.tolist())
 
         # Creamos la que va a ser la clave para acceder al dataframe
-        filename = file_input.split('.')[0]
-        dataframes.update({filename: data})
+        key = file_input.split('.')[0]
+        if re.search(".*[mM]useo.*", key):
+            key = "museo"
+        elif re.search('.*[cC]ine.*', key):
+            key = "cine"
+        elif re.search('.*[bB]iblioteca.*', key):
+            key = "biblioteca"
+
+        dataframes.update({key: data})
 
         sptlist = create_split_list(data.columns.tolist())
 
@@ -54,9 +64,17 @@ def main():
     # Eliminamos los campos que son nan
     data = data.astype(object).where(pd.notnull(data), None)
 
-    # Deberia procesarse la informacion relacionada a los cines dentro de este modulo, de esta forma conseguimos que el main solo se encargue
-    # de subirla a la base de datos
-    return (dataframes, data)
+    df_cines = dataframes['cine']
+
+    query = """SELECT provincia, SUM(pantallas) as pantallas, COUNT(espacio_incaa) as espacio_incaa, SUM(butacas) as butacas
+            FROM df_cines GROUP BY provincia"""
+
+    cines = sqldf(query, locals())
+
+    print("Informacion procesada del dataframe")
+    print(cines)
+
+    return (cines, data)
         
 if __name__ == '__main__':
     main()
