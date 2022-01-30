@@ -1,0 +1,9 @@
+requests
+pandas
+python-decouple
+pandasql 
+unidecode 
+numpy
+SQLAlchemy
+windows-curses
+psycopg2

@@ -14,10 +14,10 @@ from decouple import config
 # TODO:
 #      - Chequear que existan todas las claves necesarias en el archivo settings
 #      - Agregar un log de informacion
-#      - Agregar validaciones para los archivos, las conexiones de la DB y las tablas
+#      - Agregar validaciones para las conexiones de la DB
 #      - Mejorar la jerarquia de excepciones
-#      - Agregar un venv
 #      - Revisar sintaxis PEP8
+#      - Cuando convertimos del DataFrame a sql los registros se suben sin clave primaria
 
 meses = {'1': 'enero',
          '2': 'febrero',
@@ -69,6 +69,9 @@ def separate_input():
             if not os.path.exists(date_folder):
                 os.mkdir(date_folder)
 
+            if os.path.isfile(date_folder + new_name):
+                os.remove(date_folder + new_name)
+
             shutil.copyfile(filepath, date_folder + file_input)
             os.rename(date_folder + file_input, date_folder + new_name)
 
@@ -78,6 +81,9 @@ def separate_input():
             if not os.path.exists(date_folder):
                 os.mkdir(date_folder)
 
+            if os.path.isfile(date_folder + new_name):
+                os.remove(date_folder + new_name)
+
             shutil.copyfile(filepath, date_folder + file_input)
             os.rename(date_folder + file_input, date_folder + new_name)
 
@@ -86,6 +92,9 @@ def separate_input():
 
             if not os.path.exists(date_folder):
                 os.mkdir(date_folder)
+
+            if os.path.isfile(date_folder + new_name):
+                os.remove(date_folder + new_name)
 
             shutil.copyfile(filepath, date_folder + file_input)
             os.rename(date_folder + file_input, date_folder + new_name)

@@ -6,9 +6,8 @@ import logging
 import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine, Column, Integer, String
+import sqlalchemy
 from sqlalchemy.orm import sessionmaker
-
-from sqlalchemy_utils import database_exists, create_database
 
 from models import Datos
 
@@ -40,10 +39,12 @@ class Database:
 
     def drop_data_from_table(self, table):
         try:
-            sql = "TRUNCATE %s" % table
-            self.engine.connect()
-            self.engine.execute(sql)
-            self.session.commit()
+            ins = sqlalchemy.inspect(self.engine)
+            if ins.has_table(table):
+                sql = "TRUNCATE %s" % table
+                self.engine.connect()
+                self.engine.execute(sql)
+                self.session.commit()
         except Exception:
             print('Error eliminando la informacion')
             self.log_error()
