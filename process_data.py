@@ -1,11 +1,10 @@
 import pandas as pd
-import pandasql as ps
 import os
-import numpy as np
 import re
 import unidecode
 from decouple import config
 from pandasql import sqldf
+from datetime import datetime
 
 def normalize_headers(headers):
     for i in range(len(headers)):
@@ -64,15 +63,22 @@ def main():
     # Eliminamos los campos que son nan
     data = data.astype(object).where(pd.notnull(data), None)
 
+    rows = len(data.index) 
+    date = datetime.now().strftime('%d/%m/%Y')
+    date_column = [date] * rows
+    data['fecha'] = date_column
+
     df_cines = dataframes['cine']
 
     query = """SELECT provincia, SUM(pantallas) as pantallas, COUNT(espacio_incaa) as espacio_incaa, SUM(butacas) as butacas
             FROM df_cines GROUP BY provincia"""
 
-    cines = sqldf(query, locals())
-
-    print("Informacion procesada del dataframe")
-    print(cines)
+    try:
+        cines = sqldf(query, locals())
+        rows = len(cines.index) 
+        cines['fecha'] = [date] * rows
+    except:
+        raise Exception('No se pudo ejecutar la query sobre el dataframe.')
 
     return (cines, data)
         

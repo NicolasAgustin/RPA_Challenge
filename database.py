@@ -1,15 +1,10 @@
 from curses import echo
 import datetime
-import traceback
 from psycopg2 import connect
 import logging
-import numpy as np
-import pandas as pd
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
-
-from models import Datos
 
 class Database:
 
@@ -29,7 +24,7 @@ class Database:
             self.log_error()
             
     def log_error(self):
-        logger = logging.getLogger('log')
+        logger = logging.getLogger('error')
         logger.setLevel(logging.ERROR)
         fh = logging.FileHandler('error.log')
         fh.setLevel(logging.ERROR)

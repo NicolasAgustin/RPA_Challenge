@@ -7,3 +7,4 @@ numpy
 SQLAlchemy
 windows-curses
 psycopg2
+virtualenv
