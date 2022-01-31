@@ -7,6 +7,14 @@ from pandasql import sqldf
 from datetime import datetime
 
 def normalize_headers(headers):
+    """[Normaliza los headers, debido a que aveces vienen con caracteres raros o con diferentes nombres]
+
+    Args:
+        headers ([list]): [Lista con los headers]
+
+    Returns:
+        [list]: [Lista con los headers normalizados]
+    """
     for i in range(len(headers)):
         headers[i] = headers[i].lower()
         headers[i] = unidecode.unidecode(headers[i])
@@ -15,6 +23,14 @@ def normalize_headers(headers):
     return headers
 
 def create_split_list(actual_headers):
+    """[summary]
+
+    Args:
+        actual_headers ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
     spliting_list = []
     headers_needed = ['cod_loc', 'idprovincia', 'iddepartamento', 'categoria', 'provincia', 'localidad', 
                       'nombre', 'domicilio', 'cp', 'telefono', 'mail', 'web']

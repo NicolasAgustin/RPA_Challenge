@@ -28,6 +28,8 @@ meses = {'1': 'enero',
          '12': 'diciembre'}
 
 def make_environment():
+    """[Esta funcion crea la estructura de carpetas]
+    """
     datos_path = config('DATOSPATH')
     if not os.path.exists(datos_path):
         os.mkdir(datos_path)
