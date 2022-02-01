@@ -3,18 +3,14 @@ import os
 import re
 import database
 import process_data
+import download_file
 import datetime
 import shutil
 
 from decouple import config
 
-# TODO:
-#      - Chequear que existan todas las claves necesarias en el archivo settings
-#      - Agregar validaciones para las conexiones de la DB
-#      - Revisar sintaxis PEP8
-#      - Cuando convertimos del DataFrame a sql los registros se suben sin clave primaria
-
-meses = {'1': 'enero',
+meses = {
+         '1': 'enero',
          '2': 'febrero',
          '3': 'marzo',
          '4': 'abril',
@@ -25,10 +21,11 @@ meses = {'1': 'enero',
          '9': 'septiembre',
          '10': 'octubre',
          '11': 'noviembre',
-         '12': 'diciembre'}
+         '12': 'diciembre'
+        }
 
 def make_environment():
-    """[Esta funcion crea la estructura de carpetas]
+    """Esta funcion crea la estructura de carpetas
     """
     datos_path = config('DATOSPATH')
     if not os.path.exists(datos_path):
@@ -37,10 +34,14 @@ def make_environment():
         path = '{}/{}/'.format(datos_path, dir)
         if not os.path.exists(path):
             os.mkdir(path)
-        
-    # Crear la carpeta con la fecha de ejecucion
+
 
 def separate_input():
+    """Itera por cada archivo de la carpeta de input y lo clasifica dentro de su respectiva categoria
+
+    Returns:
+        bool: True si se pudo realizar correctamente de lo contrario False
+    """
     dt = datetime.datetime.now()
     (dia, mes, anio) = dt.day, dt.month, dt.year
     input_path = config('INPUTPATH')
@@ -98,26 +99,31 @@ def separate_input():
                 os.rename(date_folder + file_input, date_folder + new_name)
         
         return True
-    except Exception as ex:
+    except Exception:
         log_error()
         return False
 
 def log_error():
+    """Funcion para logear un error
+    """
     logger = logging.getLogger('error')
     logger.setLevel(logging.ERROR)
-    fh = logging.FileHandler('error.log')
+    fh = logging.FileHandler(config('LOGERRORPATH'))
     fh.setLevel(logging.ERROR)
     logger.addHandler(fh)
     timestamp = datetime.datetime.now().strftime("%d.%b %Y %H:%M:%S")
     logger.error(timestamp + ' %s', exc_info=1)
 
 def empty_input_folder():
+    """Vaciar el directorio de input
+    """
     input_folder = config('INPUTPATH')
     for file in os.listdir(input_folder):
         os.remove(input_folder + file)
 
 def main():
-
+    """Proceso main
+    """
     print("Antes de la creacion del log")
 
     logging.basicConfig(filename=config('LOGPATH'),
@@ -128,15 +134,19 @@ def main():
 
     for setting in ["LOGPATH", "LOGERRORPATH", "INPUTPATH", "DATOSPATH", "BIBLIOTECAS", 
                      "MUSEOS", "CINES", "DBUSER", "DBPSWD", "DBHOST", "DBPORT", "DBNAME"]:
-        if config(setting) == "":
-            logging.info('ERROR: No existe la clave {} en el archivo de configuracion.'.format(setting))
-            return
+        try: 
+            if config(setting) == "":
+                logging.info('ERROR: No existe la clave {} en el archivo de configuracion.'.format(setting))
+                return
+        except Exception:
+            log_error()
 
     make_environment()
 
     logging.info('Make environment: OK')
 
-    # Aca falta descargar el input con requests
+    # No funciona
+    # download_file.main()
 
     if not separate_input():
         logging.info('Separate input: ERROR')
@@ -153,7 +163,7 @@ def main():
                             host=config('DBHOST'),
                             port=config('DBPORT'),
                             db=config('DBNAME'))
-    except:
+    except Exception: 
         logging.info('Database: ERROR')
         log_error()
         return
@@ -164,7 +174,7 @@ def main():
         # Agregar revision para chequear cuando la tabla no existe, ya que tira un error cuando la tabla no existe
         db.drop_data_from_table('datos')
         db.drop_data_from_table('cines')
-    except:
+    except Exception:
         logging.info('Drop data from tables: ERROR')
         log_error()
         return
@@ -172,8 +182,8 @@ def main():
     logging.info('Drop data from tables: OK')
 
     try:
-        (df_cines, df_sql) = process_data.main()
-    except:
+        (df_cines, df_sql, df_cant) = process_data.main()
+    except Exception:
         logging.info('Process data: ERROR')
         log_error()
         return
@@ -183,7 +193,8 @@ def main():
     try:
         db.insert_dataframe(df_sql, 'datos')
         db.insert_dataframe(df_cines, 'cines')
-    except:
+        db.insert_dataframe(df_cant, 'informacion')
+    except Exception:
         logging.info('Push data to DB: ERROR')
         log_error()
         return

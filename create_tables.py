@@ -5,6 +5,8 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 
 def main():
+    """ Crea las tablas por defecto que deberia tener la base de datos
+    """
     try:
         user = config('DBUSER')
         passwd = config('DBPSWD')
@@ -19,7 +21,7 @@ def main():
         connection.execute(open("scripts/create_data_table.sql","r").read())
         connection.execute(open("scripts/create_cines_table.sql","r").read())
         session.commit()
-    except Exception as ex:
+    except Exception:
         logger = logging.getLogger('error')
         logger.setLevel(logging.ERROR)
         fh = logging.FileHandler(config('LOGERRORPATH'))

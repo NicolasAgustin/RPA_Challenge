@@ -6,14 +6,14 @@ from decouple import config
 from pandasql import sqldf
 from datetime import datetime
 
-def normalize_headers(headers):
-    """[Normaliza los headers, debido a que aveces vienen con caracteres raros o con diferentes nombres]
+def normalize_headers(headers: list):
+    """Normaliza los headers, debido a que aveces vienen con caracteres raros o con diferentes nombres
 
     Args:
-        headers ([list]): [Lista con los headers]
+        headers (list): Lista con los headers
 
     Returns:
-        [list]: [Lista con los headers normalizados]
+        list: Lista con los headers normalizados
     """
     for i in range(len(headers)):
         headers[i] = headers[i].lower()
@@ -22,14 +22,15 @@ def normalize_headers(headers):
             headers[i] = "domicilio"
     return headers
 
-def create_split_list(actual_headers):
-    """[summary]
+def create_split_list(actual_headers: list):
+    """Creamos una lista que servira de "rango" para recortar el dataframe. Nos aseguramos de que si el dataframe no posee un header
+    que es necesario, entonces no se agregue a la lista de recorte.
 
     Args:
-        actual_headers ([type]): [description]
+        actual_headers (list): Headers que posee el dataframe
 
     Returns:
-        [type]: [description]
+        : Lista con los headers a recortar
     """
     spliting_list = []
     headers_needed = ['cod_loc', 'idprovincia', 'iddepartamento', 'categoria', 'provincia', 'localidad', 
@@ -42,7 +43,10 @@ def create_split_list(actual_headers):
     return spliting_list
     
 def main():
-    input_path = config('INPUTPATH')
+    try:
+        input_path = config('INPUTPATH')
+    except:
+        raise Exception('Error al leer el archivo de configuracion')
 
     dataframes = {}
     accum = []
@@ -70,33 +74,68 @@ def main():
 
         dataframes.update({key: data})
 
+        # sptlist va a ser el "rango" que se va a cortar del dataframe
         sptlist = create_split_list(data.columns.tolist())
 
         aux = data[sptlist]
         accum.append(aux)
 
+    # Unificamos toda la informacion acumulada
     data = pd.concat(accum, join="outer")
+
     # Eliminamos los campos que son nan
     data = data.astype(object).where(pd.notnull(data), None)
 
     rows = len(data.index) 
     date = datetime.now().strftime('%d/%m/%Y')
+    # Creamos una lista para completar la columna fecha en la DB
     date_column = [date] * rows
     data['fecha'] = date_column
 
-    df_cines = dataframes['cine']
+    df = dataframes['cine']
 
     query = """SELECT provincia, SUM(pantallas) as pantallas, COUNT(espacio_incaa) as espacio_incaa, SUM(butacas) as butacas
-            FROM df_cines GROUP BY provincia"""
+            FROM df GROUP BY provincia"""
 
     try:
+
+        # Ejecutamos la query sobre df
         cines = sqldf(query, locals())
         rows = len(cines.index) 
         cines['fecha'] = [date] * rows
+
+        registros = []
+
+        cantidad_registros_df = [
+                dataframes['cine'], 
+                dataframes['museo'],
+                dataframes['biblioteca']
+            ]
+
+        # Unificamos la informacion obtenida
+        all_data = pd.concat(cantidad_registros_df, join="outer")
+
+        querys = [
+            "SELECT fuente as tipo_registro, COUNT(*) as cantidad_registros FROM all_data GROUP BY tipo_registro",
+            "SELECT categoria as tipo_registro, COUNT(*) as cantidad_registros FROM all_data GROUP BY tipo_registro",
+            "SELECT provincia as tipo_registro, COUNT(*) as cantidad_registros FROM all_data GROUP BY tipo_registro"
+        ]
+
+        # Ejecutamos cada query y agregamos el dataframe obtenido a la lista de registros
+        for q in querys:
+            aux_df = sqldf(q, locals())
+            registros.append(aux_df)
+            
+        # Unificamos la informacion obtenida
+        cantidad_registros_df = pd.concat(registros, join="outer")
+
+        rows = len(cantidad_registros_df.index)
+        cantidad_registros_df['fecha'] = [date] * rows
+
     except:
         raise Exception('No se pudo ejecutar la query sobre el dataframe.')
 
-    return (cines, data)
+    return (cines, data, cantidad_registros_df)
         
 if __name__ == '__main__':
     main()
