@@ -1,0 +1,7 @@
+2022-02-01 00:22:11,225 - Make environment: OK
+2022-02-01 00:22:11,235 - Separate input: OK
+2022-02-01 00:22:11,260 - Database: OK
+2022-02-01 00:22:11,300 - Drop data from tables: OK
+2022-02-01 00:22:11,729 - Process data: OK
+2022-02-01 00:22:11,895 - Push data to DB: OK
+2022-02-01 00:22:11,896 - Clear input folder: OK
