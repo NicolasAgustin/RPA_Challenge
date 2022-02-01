@@ -174,6 +174,7 @@ def main():
         # Agregar revision para chequear cuando la tabla no existe, ya que tira un error cuando la tabla no existe
         db.drop_data_from_table('datos')
         db.drop_data_from_table('cines')
+        db.drop_data_from_table('informacion')
     except Exception:
         logging.info('Drop data from tables: ERROR')
         log_error()
