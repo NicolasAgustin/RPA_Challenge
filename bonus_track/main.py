@@ -1,7 +1,13 @@
+import os
 from decouple import config
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from openpyxl import load_workbook
+
+def make_env():
+    output_path = config('OUTPUTPATH')
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
 
 def main():
 
