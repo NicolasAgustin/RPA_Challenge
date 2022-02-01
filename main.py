@@ -201,7 +201,8 @@ def main():
 
     logging.info('Push data to DB: OK')
 
-    empty_input_folder()
+    # No se borran los archivos de input para poder testear
+    # empty_input_folder()
 
     logging.info('Clear input folder: OK')
 
